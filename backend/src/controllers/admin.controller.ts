@@ -8,6 +8,7 @@ import {
   deleteUser,
 } from '../services/admin.service'
 
+
 // ── Get pending properties ─────────────────────────────
 export const listPendingProperties = async (req: Request, res: Response) => {
   try {

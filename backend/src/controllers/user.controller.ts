@@ -7,6 +7,8 @@ import {
   getAgentProfile,
 } from '../services/user.service'
 import { uploadImage } from '../utils/cloudinary'
+import { File } from 'multer'
+
 
 // ── Get my profile ─────────────────────────────────────
 export const getMyProfile = async (req: Request, res: Response) => {
@@ -69,7 +71,7 @@ export const getAgent = async (req: Request, res: Response) => {
 export const uploadAvatar = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id
-    const file = req.file as Express.Multer.File
+    const file = req.file as File
 
     console.log('File received:', file) // ← add this to debug
 
