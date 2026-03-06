@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Notifications
+model Notification {
+  id        String   @id @default(uuid())
+  type      String   // e.g. "PROPERTY_APPROVED", "NEW_MESSAGE", "NEW_REVIEW"
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@map("notifications")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  fullName      String
+  email         String    @unique
+  phone         String    @unique
+  password      String
+  role          Role      @default(BUYER)
+  isVerified    Boolean   @default(false)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  properties           Property[]
+  favorites            Favorite[]
+  sentMessages         Message[]             @relation("sender")
+  receivedMessages     Message[]             @relation("receiver")
+  writtenReviews       Review[]              @relation("reviewer")
+  agentReviews         Review[]              @relation("agent")
+  verificationRequests VerificationRequest[]
+  notifications        Notification[]
+
+  @@map("users")
+}
+
+model Property {
+  id           String       @id @default(uuid())
+  title        String
+  description  String       @db.Text
+  priceRwf     Float
+  priceUsd     Float?
+  sizeSqm      Float
+  propertyType PropertyType
+  district     String
+  sector       String
+  latitude     Float?
+  longitude    Float?
+  isVerified   Boolean      @default(false)
+  status       Status       @default(PENDING)
+  viewCount    Int          @default(0)
+  slug         String       @unique
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  deletedAt    DateTime?    @map("deleted_at")
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  images               PropertyImage[]
+  favorites            Favorite[]
+  messages             Message[]
+  reviews              Review[]              @relation("property")
+  verificationRequests VerificationRequest[]
+
+  @@index([district])
+  @@index([priceRwf])
+  @@index([status])
+  @@index([createdAt])
+  @@map("properties")
+}
+
+model PropertyImage {
+  id        String   @id @default(uuid())
+  imageUrl  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_images")
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@map("favorites")
+}
+
+model Message {
+  id        String    @id @default(uuid())
+  content   String    @db.Text
+  createdAt DateTime  @default(now()) @map("created_at")
+  readAt    DateTime?
+
+  senderId String
+  sender   User   @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  receiverId String
+  receiver   User   @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
+
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  reviewerId String
+  reviewer   User   @relation("reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  agentId String
+  agent   User   @relation("agent", fields: [agentId], references: [id], onDelete: Cascade)
+
+  propertyId String?
+  property   Property? @relation("property", fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewerId, agentId])
+  @@map("reviews")
+}
+
+model VerificationRequest {
+  id          String             @id @default(uuid())
+  documentUrl String
+  status      VerificationStatus @default(PENDING)
+  createdAt   DateTime           @default(now()) @map("created_at")
+  reviewedAt  DateTime?
+
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  reviewedBy String?
+  reviewer   User?   @relation(fields: [reviewedBy], references: [id])
+
+  @@map("verification_requests")
+}
+
+enum Role {
+  BUYER
+  SELLER
+  AGENT
+  ADMIN
+}
+
+enum PropertyType {
+  LAND
+  HOUSE
+  APARTMENT
+  COMMERCIAL
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}

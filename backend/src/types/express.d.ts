@@ -1,0 +1,10 @@
+// src/types/express.d.ts
+import { ParamsDictionary } from 'express-serve-static-core'
+
+declare global {
+  namespace Express {
+    interface Request {
+      params: ParamsDictionary
+    }
+  }
+}
