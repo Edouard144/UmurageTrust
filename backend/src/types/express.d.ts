@@ -1,7 +1,13 @@
-declare global {
-  namespace Express {
-    interface Request {
-      file: Express.Multer.File
+// src/types/express.d.ts
+declare namespace Express {
+  namespace Multer {
+    interface File {
+      fieldname: string
+      originalname: string
+      encoding: string
+      mimetype: string
+      size: number
+      buffer: Buffer
     }
   }
 }
