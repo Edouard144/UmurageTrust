@@ -43,4 +43,15 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/user", userRoutes);
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    name: 'UmurageTrust API',
+    version: '1.0.0',
+    status: 'running',
+    docs: '/api/docs',
+    health: '/health',
+  })
+})
+
 export default app;
